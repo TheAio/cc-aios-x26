@@ -1,0 +1,9 @@
+TERMINAL BG 128
+TERMINAL CLEAR
+STORE STRING "rm /.sys/tmp/short/" 10
+SH 10
+STORE STRING "mkdir /.sys/tmp/short/" 10
+SH 10
+STORE STRING "/.sys/main.lua" 10
+SH 10
+RESET
