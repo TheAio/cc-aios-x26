@@ -1,0 +1,179 @@
+function ditther(sx,sy,ex,ey)
+    for i=sy,ey do
+        for j=sx,ex do
+            term.setCursorPos(j,i)
+            term.write(string.char(127))
+        end
+    end
+end
+term.setPaletteColor(colors.brown,0x050505)
+term.setPaletteColor(colors.black,0x0)
+term.setPaletteColor(colors.gray,0x1F1F1F)
+term.setPaletteColor(colors.white,0xFFFFFF)
+function clear()
+    term.setBackgroundColor(colors.black)
+    term.clear()
+    TW,TH = term.getSize()
+    term.setTextColor(colors.brown)
+    ditther(1,1,TW-1,TH)
+    term.setTextColor(colors.white)
+end
+TW,TH = term.getSize()
+function centerS(str,y)
+    term.setCursorPos((TW/2)-string.len(str)/2,y)
+end
+function menu(opts)
+    sel=1
+    while true do
+        clear()
+        for i=1,#opts do
+            centerS(opts[i],i)
+            if i == sel then
+                print(">"..opts[i])
+            else
+                print(opts[i])
+            end
+        end
+        e,k = os.pullEvent("key")
+        if k == keys.up or k == keys.w then
+            sel = sel - 1
+        elseif k == keys.down or k == keys.s then
+            sel = sel + 1
+        elseif k == keys.enter then
+            return sel
+        end
+        if sel < 1 then sel = 1 end
+        if sel > #opts then sel = #opts end
+    end
+end
+
+function PSgetProject(id)
+    sleep(math.random())
+    local gRaw = http.get("https://pinestore.cc/api/project/"..id)
+    if gRaw == nil then return nil end
+    local gFormatted = textutils.unserializeJSON(gRaw.readAll())
+    gRaw.close()
+    if gFormatted.sucsess ~= true then return nil end
+    return gFormatted
+end
+function PSgetTitles(sid,eid)
+    local j={}
+    for i=sid,eid do
+        local k = PSgetProject(i)
+        if k == nil then break end
+        j[#j+1] = {i,k}
+    end
+    return j
+end
+function PSsearchMenu()
+    clear()
+    centerS("Enter name of project or EXIT to exit")
+    print("Enter name of project or EXIT to exit")
+    local sel = read()
+    error("TODO")
+end
+function PSlistMenu()
+    TW,TH = term.getSize()
+    local function l_B()
+        sleep(math.random())
+        local i = http.get("https://pinestore.cc/api/projects")
+        if i == nil then
+        return nil        
+        end
+        local j = textutils.unserializeJSON(i.readAll())
+        i.close()
+        if j.success ~= true then
+        return nil
+        end
+        local projects = j.projects
+        return projects
+    end
+    local function l_A(page,projects)
+        i = {"back","next"}
+        for j=page,#projects do
+            if j-page > TH - 5 then break end
+            i[#i+1]=projects[j].name.." I:"..projects[j].id.." S:"..(#i-1).." P:"..page
+        end
+        return i
+    end
+    page = 1
+    while true do
+        clear()
+        local projects = l_B()
+        local i = l_A(page,projects)
+        local sel = menu(i)
+        if sel == 1 then return nil
+        elseif sel == 2 then page = page + TH - 4
+        else
+            sel = sel - 2
+            ksel = true
+            h = http.get("https://pinestore.cc/api/project/"..projects[sel+page-1].id)
+            j = textutils.unserializeJSON(h.readAll())
+            h.close()
+            j = j.project
+            while true do
+                clear()
+                centerS(j.name,1)
+                print(j.name)
+                centerS(j.owner_name,2)
+                print(j.owner_name)
+                centerS(j.description_short,6)
+                print(j.description_short)
+                centerS("install?",3)
+                print("install?")
+                centerS("[YES] no",4)
+                if ksel then
+                    print("[YES] no")
+                else
+                    print("yes [NO]")
+                end
+                e,k = os.pullEvent("key")
+                if k == keys.a or k == keys.left or k == keys.y then
+                    ksel = true
+                elseif k == keys.d or k == keys.right or k == keys.n then
+                    ksel = false
+                elseif k == keys.enter then
+                    if ksel then
+                        shell.run(j.install_command)
+                        h = fs.open("/.sys/tmp/short/.user","r")
+                        h.readLine()
+                        local u = h.readLine()
+                        h.close()
+                        if j.has_thumbnail and (not j.hide_thumbnail) then
+                            h = http.get("https://pinestore.cc/api/project/"..j.id.."/image/thumbnail?mode=contain&format=nfp&w=5&h=5")
+                            r = h.readAll()
+                            h.close()
+                            h = fs.open("/.sys/home/"..u.."/desktop/"..j.name.."/.ico.nfp","w")
+                            h.writeLine(r)
+                            h.close()
+                        else
+                            h = fs.open("/.sys/home/"..u.."/desktop/"..j.name.."/.ico.nfp","w")
+                            h.writeLine("eeeee")
+                            h.writeLine("e   e")
+                            h.writeLine("eeeee")
+                            h.writeLine("e   e")
+                            h.writeLine("e   e")
+                            h.close()
+                        end
+                        h = fs.open("/.sys/home/"..u.."/desktop/"..j.name.."/.info","w")
+                        h.writeLine("error('This is not a program')")
+                        h.writeLine("SHELL")
+                        h.writeLine(j.name)
+                        h.writeLine(j.description_short)
+                        h.writeLine("/.sys/home/"..u.."/desktop/"..j.name.."/.ico.nfp")
+                        h.writeLine("/"..j.target_file)
+                        h.close()
+                    end
+                    break
+                end
+            end
+        end
+    end
+end
+function PSmainMenu()
+    clear()
+    sel = {"back","list","search"}
+    local sel = sel[menu(sel)]
+    return sel
+end
+PSlistMenu()
