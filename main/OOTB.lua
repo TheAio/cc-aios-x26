@@ -47,7 +47,7 @@ while true do
     end
 end
 
-function lic(name,path)
+function lic(name,path,returnDeny)
     while true do
         clear()
         term.setCursorPos(TW/2-(string.len("LICENSES, NOTICES AND AGREEMENTS")/2),(TH/4)-2)
@@ -59,8 +59,14 @@ function lic(name,path)
         sleep(0.25)
         e,k = os.pullEvent("key")
         if k == keys.n then
+            if returnDeny then
+                return false
+            end
             os.shutdown()
         elseif k == keys.y then
+            if returnDeny then
+                return true
+            end
             break
         elseif k == keys.r then
             term.clear()
@@ -124,8 +130,25 @@ else
     print("Install standard software? y/N")
     term.setCursorPos(TW/2-(string.len(" ")/2),(TH/4)+1)
     if string.upper(read()) == "Y" then
-        printError("No software avaible at this time!")
-        sleep(1)
+        clear()
+        shell.run("wget https://raw.githubusercontent.com/Xella37/PineStore-site/refs/heads/main/LICENSE /.sys/tmp/short/PSLIC")
+        if lic("pinestore copyright notice","/.sys/tmp/short/PSLIC",true) then
+            shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/.ico.nfp /.sys/home/"..uname.."/desktop/store/.ico.nfp")
+            shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/entry.point /.sys/home/"..uname.."/desktop/store/entry.point")
+            shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/.info /.sys/home/"..uname.."/desktop/store/.info")
+        end
+        clear()
+        sleep(math.random())
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/systm/.ico.nfp /.sys/home/"..uname.."/desktop/systm/.ico.nfp")
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/systm/.info /.sys/home/"..uname.."/desktop/systm/.info")
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/systm/entry.point /.sys/home/"..uname.."/desktop/systm/entry.point")
+        clear()
+        sleep(math.random())
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/files/.ico.nfp /.sys/home/"..uname.."/desktop/files/.ico.nfp")
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/files/.info /.sys/home/"..uname.."/desktop/files/.info")
+        shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/files/entry.point /.sys/home/"..uname.."/desktop/files/entry.point")
+        clear()
+        sleep(0)
     end
     sleep(0)
 end
