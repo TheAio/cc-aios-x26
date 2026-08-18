@@ -9,11 +9,14 @@ if fs.exists("/.sys/tmp/short/.ver") and fs.exists("/.sys/common/.ver") then
         printError("New major update avaible, manual intervention needed!")
         sleep(5)
     end
-    if h.readLine() ~= j.readLine() then
+    k = j.readLine()
+    if h.readLine() ~= k then
         term.setBackgroundColor(colors.black)
         term.setCursorPos(1,1)
         term.clear()
         printError("System update in progress, please wait...")
+        j.close()
+        shell.run("cp /.sys/tmp/short/.ver /.sys/common/.ver")
         while true do
             k=h.readLine()
             if k == nil then break end
