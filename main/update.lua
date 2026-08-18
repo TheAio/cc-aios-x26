@@ -16,6 +16,7 @@ if fs.exists("/.sys/tmp/short/.ver") and fs.exists("/.sys/common/.ver") then
         term.clear()
         printError("System update in progress, please wait...")
         j.close()
+        shell.run("rm /.sys/common/.ver")
         shell.run("cp /.sys/tmp/short/.ver /.sys/common/.ver")
         while true do
             k=h.readLine()
