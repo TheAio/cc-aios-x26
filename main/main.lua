@@ -1,5 +1,9 @@
+--TODO: IMPORTANT: add /.sys/tmp/short/.user
+
+safeMode = false
 TW,TH = term.getSize()
 function rgbToHex(R,G,B)
+    if safeMode then return 0xAAAAAA end
     local h = {
     {"A",10},{"B",11},
     {"C",12},{"D",13},
@@ -11,16 +15,21 @@ function rgbToHex(R,G,B)
     return tonumber("0x"..R..R..G..G..B..B)
 end
 function transportColor(TARGET,HEX)
-    term.setPaletteColor(TARGET,HEX)
+    if not safeMode then
+        term.setPaletteColor(TARGET,HEX)
+    end
 end
 function fade(R,G,B,AMMOUNT)
+    if safeMode then return R,G,B end
     return math.floor(R*AMMOUNT),math.floor(G*AMMOUNT),math.floor(B*AMMOUNT)
 end
 function ditther(sx,sy,ex,ey)
-    for i=sy,ey do
-        for j=sx,ex do
-            term.setCursorPos(j,i)
-            print(string.char(127))
+    if not safeMode then
+        for i=sy,ey do
+            for j=sx,ex do
+                term.setCursorPos(j,i)
+                print(string.char(127))
+            end
         end
     end
 end
@@ -93,6 +102,10 @@ function AMenu(user)
     end
 end
 function desktop(user)
+    h = fs.open("/.sys/tmp/short/.user","w")
+    h.writeLine("error('this is not a program')")
+    h.writeLine(user)
+    h.close()
     isAdmin = checkAuth(user,0)
     while true do
         if fs.exists("/.sys/home/"..user.."/desktop/") then
@@ -146,7 +159,14 @@ function desktop(user)
             appPos[#appPos+1]={apps[i],j,k,j+5,k+5}
             term.setCursorPos(j,k)
             if apps[i][4] ~= nil then
-                paintutils.drawImage(paintutils.loadImage(apps[i][4]),j,k)
+                if apps[i][4] == "%HERE%" then
+                    if fs.exists("/.sys/home/"..user.."/desktop/"..apps[i][2].."/.ico.nfp") then
+                        apps[i][4] = "/.sys/home/"..user.."/desktop/"..apps[i][2].."/.ico.nfp"
+                    end
+                end
+                if not safeMode then
+                    paintutils.drawImage(paintutils.loadImage(apps[i][4]),j,k)
+                end
             else
                 term.setBackgroundColor(colors.yellow)
                 paintutils.drawFilledBox(j,k,j+4,k+4)
@@ -164,7 +184,13 @@ function desktop(user)
                 k=k+6
             end
         end
-        local function lnch(appInfo)
+        local function lnch(appInfo,uname)
+            if appInfo[5] == "%HERE%" then
+                appInfo[5] = "/.sys/home/"..uname.."/desktop/"..appInfo[2].."/entry.point"
+            end
+            if appInfo[4] == "%HERE%" then
+                appInfo[4] = "/.sys/home/"..uname.."/desktop/"..appInfo[2].."/.ico.nfp"
+            end
             --{ type,name,description,icon,parameters }
             if appInfo[1] == "FILE" then
                 if isAdmin then
@@ -245,7 +271,7 @@ function desktop(user)
                 for i=1,#appPos do
                     if y-1>appPos[i][3] and y+1<appPos[i][5] then
                         if x-1>appPos[i][2] and x+1<appPos[i][4] then
-                            lnch(appPos[i][1])
+                            lnch(appPos[i][1],user)
                         end
                     end
                 end
@@ -258,7 +284,7 @@ function desktop(user)
             else
                 if x ~= nil then
                     if x < #appPos+1 then
-                        lnch(appPos[i][1])
+                        lnch(appPos[i][1],user)
                     end
                 end
             end
@@ -295,6 +321,12 @@ function login()
     term.setTextColor(colors.white)
     term.setCursorPos((TW/2)-string.len("ANAVARAGEUSERNAME")/2,(TH/4)+3)
     uname = read()
+    if uname == "%SAFEMODE%" then
+        safeMode = true
+        term.clear()
+        print("Safe mode activated, login username:")
+        uname = read()
+    end
     if fs.exists("/.sys/home/"..uname.."/") then
         if fs.exists("/.sys/home/"..uname.."/conf/.pass.key") then
             term.setCursorPos((TW/2)-string.len("ANAVARAGEUSERNAME")/2,(TH/4)+5)
