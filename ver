@@ -1,2 +1,10 @@
 x26 CARBON
-1
+0x000002
+rm /.sys/common/OOTB.lua
+wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/main/OOTB.lua /.sys/common/OOTB.lua
+rm /.sys/main.lua
+wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/main/main.lua /.sys/main.lua
+rm /.boot/init/10.prgm
+wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/main/10.prgm /.boot/init/10.prgm
+rm /.sys/common/update.lua
+wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/main/update.lua /.sys/common/update.lua
