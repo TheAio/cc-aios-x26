@@ -1,0 +1,144 @@
+function ditther(sx,sy,ex,ey)
+    for i=sy,ey do
+        for j=sx,ex do
+            term.setCursorPos(j,i)
+            term.write(string.char(127))
+        end
+    end
+end
+term.setPaletteColor(colors.brown,0x050505)
+term.setPaletteColor(colors.black,0x0)
+term.setPaletteColor(colors.gray,0x1F1F1F)
+term.setPaletteColor(colors.white,0xFFFFFF)
+function clear()
+    term.setBackgroundColor(colors.black)
+    term.clear()
+    TW,TH = term.getSize()
+    term.setTextColor(colors.brown)
+    ditther(1,1,TW-1,TH)
+    term.setTextColor(colors.white)
+end
+TW,TH = term.getSize()
+PWD = {"/"}
+WD = "/"
+sel = 1
+while true do
+    clear()
+    f=fs.list(WD)
+    j = 0
+    for i=1,#f do
+        if i > TH-2 then break end
+        term.setCursorPos(1,i)
+        if fs.isDir(WD..f[i]) then
+            term.write(string.sub(f[i].."/",1,(TW/3)-1))
+        else
+            term.write(string.sub(f[i],1,TW/3))
+        end
+        j=i
+    end
+    term.setCursorPos(1,j+1)
+    term.write("back")
+    term.setCursorPos(1,j+2)
+    term.write("exit")
+    for i=1,TH do
+        term.setCursorPos(TW/3,i)
+        if i == sel then
+            term.write("<")
+        else
+            term.write("|")
+        end
+    end
+    if sel < #f+1 then
+        if fs.isDir(WD..f[sel].."/") then
+            c = fs.list(WD..f[sel].."/")
+            for i=1,#c do
+                if i == TW then break end
+                term.setCursorPos((TW/3)+1,i)
+                term.write(string.sub(c[i],1,TW-((TW/3)+2)))
+            end
+        else
+            h = fs.open(WD..f[sel],"r")
+            for i=1,TW do
+                c = h.readLine()
+                if type(c) ~= "string" then break end
+                if c == nil then break end
+                term.setCursorPos((TW/3)+1,i)
+                term.write(string.sub(c,1,TW-((TW/3)+2)))
+            end
+            h.close()
+        end
+    end
+    local e,k = os.pullEvent("key")
+    if k == keys.w or k == keys.up then
+        sel = sel - 1
+    elseif k == keys.s or k == keys.down then
+        sel = sel + 1
+    elseif k == keys.enter then
+        if sel == #f+2 then
+            break
+        elseif sel == #f+1 then
+            WD = PWD[#PWD]
+            PWD[#PWD] = nil
+        elseif fs.isDir(WD..f[sel].."/") then
+            PWD[#PWD+1] = WD..f[sel].."/"
+            WD = WD..f[sel].."/"
+        else
+            mSel = 1
+            mOps = {"BACK","EDIT","LUA","COPY","DELETE"}
+            while true do
+                clear()
+                term.setCursorPos((TW/2)-string.len(WD..f[sel])/2,(TH/3)-2)
+                print(WD..f[sel])
+                for i=1,#mOps do
+                    if i == mSel then
+                        term.setCursorPos((TW/2)-string.len(">".."XX".."<")/2,(TH/3)+i)
+                        print(">"..mOps[mSel].."<")
+                    else
+                        term.setCursorPos((TW/2)-string.len("XX")/2,(TH/3)+i)
+                        print(mOps[i])
+                    end
+                end
+                local e,k = os.pullEvent("key")
+                if k == keys.up or k == keys.w then
+                    mSel = mSel - 1
+                elseif k == keys.down or k == keys.s then
+                    mSel = mSel + 1
+                elseif k == keys.enter then
+                    if mOps[mSel] == "BACK" then
+                        break
+                    elseif mOps[mSel] == "EDIT" then
+                        shell.run("edit",WD..f[sel])
+                        break
+                    elseif mOps[mSel] == "LUA" then
+                        shell.run(WD..f[sel])
+                        break
+                    elseif mOps[mSel] == "COPY" then
+                        clear()
+                        term.setCursorPos((TW/2)-string.len("Full destination path: (%CANCEL% to cancel)")/2,(TH/3))
+                        print("Full destination path: (%CANCEL% to cancel)")
+                        term.setCursorPos((TW/2)-string.len("/SOME/FUNNY.PATH"),(TH/3)+1)
+                        local k = read()
+                        if k == "%CANCEL%" then break end
+                        shell.run("cp",WD..f[sel],k)
+                        break
+                    elseif mOps[mSel] == "DELETE" then
+                        clear()
+                        term.setCursorPos((TW/2)-string.len("To confirm delete, enter exactly:")/2,(TH/3)+0)
+                        print("To confirm delete, enter exactly:")
+                        term.setCursorPos((TW/2)-string.len(WD..f[sel])/2,(TH/3)+1)
+                        print(WD..f[sel])
+                        term.setCursorPos((TW/2)-string.len(WD..f[sel])/2,(TH/3)+2)
+                        if read() == WD..f[sel] then
+                            shell.run("rm",WD..f[sel])
+                        end
+                        break
+                    end
+                end
+                if mSel > #mOps then mSel = #mOps end
+                if mSel < 1 then mSel = 1 end
+            end
+        end
+    end
+    if sel > #f+2 then sel = #f+2 end
+    if sel < 1 then sel = 1 end
+end
