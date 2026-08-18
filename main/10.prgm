@@ -1,9 +1,13 @@
 TERMINAL BG 128
 TERMINAL CLEAR
+STORE STRING "/.sys/common/update.lua" 10
+SH 10
+LABELLINE RSTLN
 STORE STRING "rm /.sys/tmp/short/" 10
 SH 10
 STORE STRING "mkdir /.sys/tmp/short/" 10
 SH 10
 STORE STRING "/.sys/main.lua" 10
 SH 10
+JUMPIF 10 10 RSTLN
 RESET
