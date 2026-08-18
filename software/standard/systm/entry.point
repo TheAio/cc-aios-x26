@@ -1,0 +1,272 @@
+function ditther(sx,sy,ex,ey)
+    for i=sy,ey do
+        for j=sx,ex do
+            term.setCursorPos(j,i)
+            term.write(string.char(127))
+        end
+    end
+end
+term.setPaletteColor(colors.brown,0x050505)
+term.setPaletteColor(colors.black,0x0)
+term.setPaletteColor(colors.gray,0x1F1F1F)
+term.setPaletteColor(colors.white,0xFFFFFF)
+function clear()
+    term.setBackgroundColor(colors.black)
+    term.clear()
+    TW,TH = term.getSize()
+    term.setTextColor(colors.brown)
+    ditther(1,1,TW-1,TH)
+    term.setTextColor(colors.white)
+end
+TW,TH = term.getSize()
+function centerS(str,y)
+    term.setCursorPos((TW/2)-string.len(str)/2,y)
+end
+function menu(opts)
+    sel=1
+    while true do
+        clear()
+        for i=1,#opts do
+            centerS(opts[i],i)
+            if i == sel then
+                print(">"..opts[i])
+            else
+                print(opts[i])
+            end
+        end
+        e,k = os.pullEvent("key")
+        if k == keys.up or k == keys.w then
+            sel = sel - 1
+        elseif k == keys.down or k == keys.s then
+            sel = sel + 1
+        elseif k == keys.enter then
+            return sel
+        end
+        if sel < 1 then sel = 1 end
+        if sel > #opts then sel = #opts end
+    end
+end
+
+mA = {"EXIT","User settings","System settings"}
+while true do
+    local sel = mA[menu(mA)]
+    if sel == "EXIT" then
+        break
+    elseif sel == "User settings" then
+        local i = fs.list("/.sys/home/")
+        i[#i+1] = "BACK"
+        local sel = i[menu(i)]
+        if sel ~= "BACK" then
+            selUsr = sel
+            local h = fs.open("/.sys/home/"..sel.."/conf/permission.conf","r")
+            h.readLine()
+            if tonumber(h.readLine()) > 0 then
+                mC = {"Change password","Change permission level","Desktop settings","BACK"}
+            else
+                mC = {"Change password","Desktop settings","BACK"}
+            end
+            h.close()
+            local sel = mC[menu(mC)]
+            if sel == "Change password" then
+                term.setCursorPos(1,1)
+                PASS = read("*")
+                local j = 0
+                PASS = PASS..selUsr
+                for i=1,string.len(PASS) do
+                    j=j+string.byte(string.sub(PASS,i,i))
+                    j=j-i
+                end
+                PASS = j
+                h = fs.open("/.sys/home/"..selUsr.."/conf/.pass.key","w")
+                h.writeLine("error('This is not a program')")
+                h.writeLine(PASS)
+                h.close()
+            elseif sel == "Desktop settings" then
+                h = fs.open("/.sys/home/"..selUsr.."/conf/desktop.conf","r")
+                h.readLine()
+                oDS = {h.readLine(),h.readLine(),h.readLine(),h.readLine(),h.readLine(),h.readLine()}
+                h.close()
+                opts = {"BACK","Text color","BG Color A","BG Color B","doFade","clockFormat","GMTOffset"}
+                local mD = opts[menu(opts)]
+                if mD == "doFade" then
+                    if oDS[4] == "true" then oDS[4] = false
+                    else oDS[4] = true end
+                elseif mD == "clockFormat" then
+                    Eopts = {"BACK","12h","24h","BEATS","MC Time","UPTIME"}
+                    mE = Eopts[menu(Eopts)]
+                    if mE == "12h" then
+                        oDS[5] = "12"
+                    elseif mE == "24h" then
+                        oDS[5] = "24"
+                    elseif mE == "BEATS" then
+                        oDS[5] = "BEATS"
+                    elseif mE == "MC Time" then
+                        oDS[5] = "MCR"
+                    elseif mE == "UPTIME" then
+                        oDS[5] = "UPTIME"
+                    end
+                elseif mD == "GMTOffset" then
+                    while true do
+                        clear()
+                        term.setCursorPos(1,1)
+                        print("What is your GMT offset?")
+                        local i = os.date("!*t")
+                        local j = os.date("*t")
+                        i = j.hour-i.hour
+                        j = i
+                        if i>-1 then j="+"..tostring(i) end
+                        i=tostring(i)
+                        print("For GMT"..j,"please enter",i)
+                        GMT = read()
+                        if tonumber(GMT) ~= nil then
+                            break
+                        else
+                            print("Inavlid input, please try again!")
+                            sleep(1)
+                        end
+                    end
+                    oDS[6] = tonumber(GMT)
+                elseif mD == "Text color" then
+                    clear()
+                    term.setCursorPos(1,1)
+                    print("Enter new text color, default is 0xFFFFFF")
+                    print("It is not recommended to select a value lower then 0xDDDDDD")
+                    local i = tonumber(read())
+                    if i == nil then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    elseif i < 0 or i > 0xFFFFFF then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    else
+                        oDS[1] = i
+                    end
+                elseif mD == "BG Color A" then
+                    clear()
+                    term.setCursorPos(1,1)
+                    print("Enter new BG Color A")
+                    local i = tonumber(read())
+                    if i == nil then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    elseif i < 0 or i > 0xFFFFFF then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    else
+                        oDS[2] = i
+                    end
+                elseif mD == "BG Color B" then
+                    clear()
+                    term.setCursorPos(1,1)
+                    print("Enter new BG Color A")
+                    local i = tonumber(read())
+                    if i == nil then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    elseif i < 0 or i > 0xFFFFFF then
+                        print("Inavlid input, no changes saved.")
+                        sleep(1)
+                    else
+                        oDS[3] = i
+                    end
+                end
+                clear()
+                term.setCursorPos(1,1)
+                print("Please wait...")
+                h = fs.open("/.sys/home/"..selUsr.."/conf/desktop.conf","w")
+                h.writeLine("error('This is not a program')")
+                for i=1,#oDS do
+                    sleep(0)
+                    h.writeLine(oDS[i])
+                end
+                h.close()
+                os.reboot()
+            elseif sel == "Change permission level" then
+                while true do
+                    clear()
+                    term.setCursorPos(1,1)
+                    print("Please enter the new permission level")
+                    print("a whole number greater then -1, or EXIT to exit")
+                    local i = read()
+                    if i == "EXIT" then
+                        break
+                    else
+                        if tonumber(i) ~= nil then
+                            if math.floor(tonumber(i)) > -1 then
+                                h = fs.open("/.sys/home/"..selUsr.."/conf/permission.conf","w")
+                                h.writeLine("error('This is not a program')")
+                                h.writeLine(math.floor(tonumber(i)))
+                                h.close()
+                                os.reboot()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    elseif sel == "System settings" then
+        mB = {"BACK","REQUIRE DISK TO BOOT","DO NOT START AIOS ON BOOT","START AIOS ON BOOT","BOOTSCRIPT","DISABLE BOOT ANOTHER OS FROM DISK","ENABLE BOOT ANOTHER OS FROM DISK"}
+        mB = mB[menu(mB)]
+        if mB == "DISABLE BOOT ANOTHER OS FROM DISK" then
+            shell.run("set shell.allow_disk_startup false")
+            os.reboot()
+        elseif mB == "ENABLE BOOT ANOTHER OS FROM DISK" then
+            clear()
+            term.setCursorPos(1,1)
+            shell.run("set shell.allow_disk_startup true")
+            print("WARNING!")
+            print("This setting could make you machine vunerable to common malicious software!")
+            print("Consider disabling the feature ASAP")
+            sleep(5)
+            os.reboot()
+        elseif mB == "BOOTSCRIPT" then
+            clear()
+            term.setCursorPos(1,1)
+            print("WARNING!")
+            print("Editing this script will likely brick your machine")
+            print("You have been warned!")
+            print("To continue please enter exactly:")
+            print("IKNOWWHATIAMDOING")
+            if read() == "IKNOWWHATIAMDOING" then
+                shell.run("edit /boot.wp")
+            end
+            os.reboot()
+        elseif mB == "START AIOS ON BOOT" then
+            shell.run("set shell.allow_startup true")
+            os.reboot()
+        elseif mB == "DO NOT START AIOS ON BOOT" then
+            shell.run("set shell.allow_startup false")
+            os.reboot()
+        elseif mB == "DO NOT REQUIRE DISK TO BOOT" then
+            clear()
+            term.setCursorPos(1,1)
+            shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/main/10.prgm /.boot/init/10.prgm")
+            os.reboot()
+        elseif mB == "REQUIRE DISK TO BOOT" then
+            clear()
+            term.setCursorPos(1,1)
+            local p = peripheral.getNames()
+            j = false
+            for i = 1,#p do
+                if peripheral.getType(p[i]) == "drive" then
+                    j = p[i]
+                    break
+                end
+            end
+            if j == false then
+                print("No drive connected!")
+            else
+                print("Insert disk into drive then strike enter")
+                read()
+                shell.run("mv /.boot/init/10.prgm /disk/.boot/init/10.prgm")
+                clear()
+                term.setCursorPos(1,1)
+                print("WARNING!")
+                print("Please be carefull to not loose this disk")
+                print("Doing so may make your machine inoperable")
+                sleep(5)
+                os.reboot()
+            end
+        end
+    end
+end
