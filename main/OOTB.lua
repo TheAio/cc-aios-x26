@@ -83,6 +83,7 @@ function lic(name,path,returnDeny)
 end
 lic("copyright notice","/.sys/common/agreements/COPYRIGHT.readme")
 lic("moral agreement","/.sys/common/agreements/MORAL.readme")
+clear()
 while true do
     clear()
     sleep(0)
@@ -92,16 +93,26 @@ while true do
     print(string.rep(" ",17))
     term.setCursorPos(TW/2-(string.len("ANAVARAGEUSERNAME")/2),(TH/4)+2)
     uname = read()
-    if string.len(uname) > 0 then
+    j = false
+    for i=1,string.len(uname) do
+        if string.sub(uname,i,i) == "@" then
+            j = true
+            break
+        elseif string.sub(uname,i,i) == "%" then
+            j = true
+            break
+        end
+    end
+    if (string.len(uname)) > 0 and (not j) then
         if fs.exists("/.sys/home/"..uname.."/") == false then
             break
         end
     end
-    term.setCursorPos(TW/2-(string.len("Username too short or already in use!")/2),(TH/4)+2)
+    term.setCursorPos(TW/2-(string.len("Username invalid or already in use!")/2),(TH/4)+2)
     transportColor(colors.red,0xFF0000)
     term.clearLine()
     term.setTextColor(colors.red)
-    print("Username too short or already in use!")
+    print("Username invalid or already in use!")
     sleep(1)
 end
 clear()
@@ -126,13 +137,18 @@ if i then
     sleep(1)
     os.pullEvent("key")
 else
+    shell.run("wget https://raw.githubusercontent.com/binwiederhier/ntfy/refs/heads/main/docs/privacy.md /.sys/tmp/short/NTFYPP")
+    if lic("ntfy privacy policy","/.sys/tmp/short/NTFYPP",true) then
+        fs.open("/.sys/common/agreements/.ntfypp_has_been_accepted","w").close()
+    end
+    clear()
     term.setCursorPos(TW/2-(string.len("Install standard software? y/N")/2),(TH/4))
     print("Install standard software? y/N")
     term.setCursorPos(TW/2-(string.len(" ")/2),(TH/4)+1)
     if string.upper(read()) == "Y" then
         clear()
         shell.run("wget https://raw.githubusercontent.com/Xella37/PineStore-site/refs/heads/main/LICENSE /.sys/tmp/short/PSLIC")
-        if lic("pinestore copyright notice","/.sys/tmp/short/PSLIC",true) then
+        if lic("pinestore copyright","/.sys/tmp/short/PSLIC",true) then
             shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/.ico.nfp /.sys/home/"..uname.."/desktop/store/.ico.nfp")
             shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/entry.point /.sys/home/"..uname.."/desktop/store/entry.point")
             shell.run("wget https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/software/standard/store/.info /.sys/home/"..uname.."/desktop/store/.info")
