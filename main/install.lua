@@ -1,15 +1,17 @@
---TODO: REWRITE THIS ENTIRE FILE
 term.setBackgroundColor(colors.black)
 term.setTextColor(colors.white)
 term.clear()
 term.setCursorPos(1,1)
 print("Welcome to AIOS X26 CARBON")
-print("PLEASE NOTE THAT THIS IS A EARLY ALPHA BUILD")
 print("")
-print("This script will get everything installed and setup for you!")
-sleep(3)
+print("Please wait...")
+sleep(0)
 function fetch(file,path)
     shell.run("wget","https://raw.githubusercontent.com/TheAio/cc-aios-x26/refs/heads/main/"..file,path)
+    if fs.exists(path) == false then
+        sleep(math.random()*10)
+        fetch(file,path)
+    end
 end
 fetch("ver","/.sys/common/.ver")
 fetch("main/10.prgm","/.boot/init/10.prgm")
@@ -20,8 +22,23 @@ fetch("main/OOTB.lua","/.sys/common/OOTB.lua")
 fetch("main/update.lua","/.sys/common/update.lua")
 fetch("main/boot.lua","boot.lua")
 fetch("main/boot.wp","boot.wp")
-h=fs.open("startup.lua","w")
-h.writeLine("shell.run('boot')")
-h.writeLine("os.reboot()")
-h.close()
+if fs.exists("startup.lua") then
+    term.clear()
+    term.setCursorPos(1,1)
+    print("startup.lua already exists, overwrite?")
+    print("Y/n")
+    i = string.upper(read())
+    if i == "n" or i == "NO" then
+        os.reboot()
+    end
+    h=fs.open("startup.lua","w")
+    h.writeLine("shell.run('boot')")
+    h.writeLine("os.reboot()")
+    h.close()
+else
+    h=fs.open("startup.lua","w")
+    h.writeLine("shell.run('boot')")
+    h.writeLine("os.reboot()")
+    h.close()
+end
 os.reboot()
