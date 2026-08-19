@@ -1,5 +1,6 @@
 safeMode = false
 TW,TH = term.getSize()
+PNPHARDWARE = {}
 function rgbToHex(R,G,B)
     if safeMode then return 0xAAAAAA end
     local h = {
@@ -333,6 +334,69 @@ function login()
         term.clear()
         print("Safe mode activated, login username:")
         uname = read()
+    end
+
+    if not safeMode then
+        term.setBackgroundColor(colors.lightGray)
+        term.setTextColor(colors.gray)
+        term.clear()
+        ditther(TW/2-(TW/3),2,TW/2+(TW/3),TH-2)
+        term.setBackgroundColor(colors.black)
+        term.setTextColor(colors.white)
+        term.setCursorPos((TW/2)-string.len("Scanning for PNP hardware...")/2,(TH/4))
+        print("Scanning for PNP hardware...")
+        local j = peripheral.getNames()
+        for i=1,#j do
+            sleep(0)
+            if peripheral.getType(j[i]) == "modem" then
+                PNPHARDWARE[#PNPHARDWARE+1] = {
+                    name = j[i],
+                    type = peripheral.getType(j[i]),
+                    methods = peripheral.getMethods(j[i]),
+                    isWireless = peripheral.wrap(j[i]).isWireless()
+                }
+            elseif peripheral.getType(j[i]) == "drive" then
+                if peripheral.wrap(j[i]).getMountPath() ~= nil then
+                    if fs.exists("/"..peripheral.wrap(j[i]).getMountPath().."/.raid.conf") then
+                        PNPHARDWARE[#PNPHARDWARE+1] = {
+                        name = j[i],
+                        type = peripheral.getType(j[i]),
+                        methods = peripheral.getMethods(j[i]),
+                        path = peripheral.wrap(j[i]).getMountPath(),
+                        raid = true
+                        }
+                    else
+                        PNPHARDWARE[#PNPHARDWARE+1] = {
+                        name = j[i],
+                        type = peripheral.getType(j[i]),
+                        methods = peripheral.getMethods(j[i]),
+                        path = peripheral.wrap(j[i]).getMountPath(),
+                        raid = false
+                        }
+                    end
+                else
+                    PNPHARDWARE[#PNPHARDWARE+1] = {
+                        name = j[i],
+                        type = peripheral.getType(j[i]),
+                        methods = peripheral.getMethods(j[i]),
+                        path = peripheral.wrap(j[i]).getMountPath(),
+                        raid = false
+                    }
+                end
+            else
+                PNPHARDWARE[#PNPHARDWARE+1] = {
+                    name = j[i],
+                    type = peripheral.getType(j[i]),
+                    methods = peripheral.getMethods(j[i])
+                }
+            end
+        end
+        term.setBackgroundColor(colors.lightGray)
+        term.setTextColor(colors.gray)
+        term.clear()
+        ditther(TW/2-(TW/3),2,TW/2+(TW/3),TH-2)
+        term.setBackgroundColor(colors.black)
+        term.setTextColor(colors.white)
     end
     if fs.exists("/.sys/home/"..uname.."/") then
         if fs.exists("/.sys/home/"..uname.."/conf/.pass.key") then
