@@ -1,6 +1,15 @@
 safeMode = false
 TW,TH = term.getSize()
 PNPHARDWARE = {}
+speaker = nil
+j = peripheral.getNames()
+for i=1,#j do
+    if peripheral.getType(peripheral.getNames()[i]) == "speaker" then
+        speaker = peripheral.wrap(peripheral.getNames()[i])
+        break
+    end
+    sleep(0)
+end
 function rgbToHex(R,G,B)
     if safeMode then return 0xAAAAAA end
     local h = {
@@ -93,6 +102,12 @@ function AMenu(user)
         term.clear()
         shell.run("sh")
     elseif sel == "SHUTDOWN" then
+        if speaker ~= nil and (not safeMode) then
+            for i=1,10 do
+                speaker.playNote("xylophone",1,10-i)
+                sleep(0)
+            end
+        end
         os.shutdown()
     elseif sel == "REBOOT" then
         os.reboot()
@@ -101,6 +116,10 @@ function AMenu(user)
     end
 end
 function desktop(user)
+    if speaker ~= nil and (not safeMode) then
+        speaker.playNote("bell",1,20)
+        speaker.playNote("bell",1,10)
+    end
     h = fs.open("/.sys/tmp/short/.user","w")
     h.writeLine("error('this is not a program')")
     h.writeLine(user)
@@ -273,6 +292,10 @@ function desktop(user)
         term.write(daS)
         if term.isColor() then
             e,k,x,y = os.pullEvent("mouse_click")
+            if speaker ~= nil and (not safeMode) then
+                speaker.playNote("hat",0.25,10)
+                speaker.playNote("xylophone",0.25,20)
+            end
             if x < 2 and y == TH then
                 AMenu(user)
             else
@@ -311,7 +334,12 @@ function login()
     term.clear()
     ditther(TW/2-(TW/3),2,TW/2+(TW/3),TH-2)
     local i = 0x000000
+    local n = 1
     while i<0x505050 do
+        if speaker ~= nil then
+            speaker.playNote("xylophone",1,n)
+            n = n + n
+        end
         i=i+0x111111
         transportColor(colors.gray,i)
         transportColor(colors.lightGray,i+0x505050)
