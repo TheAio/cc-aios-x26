@@ -398,6 +398,36 @@ function login()
         term.setBackgroundColor(colors.black)
         term.setTextColor(colors.white)
     end
+    utopic = nil
+    userver = nil
+    if (not safeMode) and (fs.exists("/.sys/common/agreements/.ntfypp_has_been_accepted")) then
+        j = false
+        k = 0
+        for i=1, string.len(uname) do
+            k = i
+            if string.sub(uname,i,i) == "@" then
+                j = true
+                break
+            end
+        end
+        if j then
+            firstAt = k
+            secondAt = nil
+            j = k
+            for i=k+1, string.len(uname) do
+                if string.sub(uname,i,i) == "@" then
+                    secondAt = i
+                    break
+                end
+            end
+            local a = string.sub(uname,1,firstAt-1)
+            local b = string.sub(uname,firstAt+1,secondAt-1)
+            local b = string.sub(uname,secondAt+1,string.len(uname))
+            uname = a
+            utopic = "CC_AIOS_NTFY_BRIDGE_"..tostring(b)
+            userver = c
+        end
+    end
     if fs.exists("/.sys/home/"..uname.."/") then
         if fs.exists("/.sys/home/"..uname.."/conf/.pass.key") then
             term.setCursorPos((TW/2)-string.len("ANAVARAGEUSERNAME")/2,(TH/4)+5)
