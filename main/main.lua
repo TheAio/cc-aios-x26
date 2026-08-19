@@ -1,5 +1,3 @@
---TODO: IMPORTANT: add /.sys/tmp/short/.user
-
 safeMode = false
 TW,TH = term.getSize()
 function rgbToHex(R,G,B)
@@ -125,6 +123,7 @@ function desktop(user)
             else
                 apps[#apps+1]={"FILE",d[i],"",nil,"/.sys/home/"..user.."/desktop/"..d[i]}
             end
+            if #apps == 19 then break end
         end
         if fs.exists("/.sys/home/"..user.."/conf/desktop.conf") then
             local h = fs.open("/.sys/home/"..user.."/conf/desktop.conf","r")
@@ -155,7 +154,9 @@ function desktop(user)
         appPos={}
         j=1
         k=1
+        l=0
         for i=1,#apps do
+            l = l + 1
             appPos[#appPos+1]={apps[i],j,k,j+5,k+5}
             term.setCursorPos(j,k)
             if apps[i][4] ~= nil then
@@ -165,7 +166,12 @@ function desktop(user)
                     end
                 end
                 if not safeMode then
-                    paintutils.drawImage(paintutils.loadImage(apps[i][4]),j,k)
+                    if fs.exists(apps[i][4]) and string.len(apps[i][4]) > 0 then
+                        local desk_draw_preload = paintutils.loadImage(apps[i][4])
+                        if desk_draw_preload ~= {} then
+                            paintutils.drawImage(desk_draw_preload,j,k)
+                        end
+                    end
                 end
             else
                 term.setBackgroundColor(colors.yellow)
@@ -178,8 +184,9 @@ function desktop(user)
             else
                 print(apps[i][2])
             end
-            j=i*7
+            j=l*7
             if j+5 > TW then
+                l=1
                 j=1
                 k=k+6
             end
